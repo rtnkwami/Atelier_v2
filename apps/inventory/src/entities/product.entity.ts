@@ -2,13 +2,15 @@ import {
   DecimalType,
   Entity,
   JsonType,
+  OptionalProps,
   PrimaryKey,
   Property,
 } from '@mikro-orm/core';
-import { BaseEntity } from './base.entity';
 
 @Entity()
-export class Product extends BaseEntity<'description' | 'images'> {
+export class Product {
+  [OptionalProps]?: 'description' | 'images' | 'createdAt' | 'updatedAt';
+
   @PrimaryKey()
   id: string;
 
@@ -33,4 +35,13 @@ export class Product extends BaseEntity<'description' | 'images'> {
 
   @Property({ type: new JsonType(), default: '[]' })
   images: string[] = [];
+
+  @Property({ defaultRaw: 'now()' })
+  createdAt = new Date();
+
+  @Property({
+    onUpdate: () => new Date(),
+    defaultRaw: 'now()',
+  })
+  updatedAt = new Date();
 }
