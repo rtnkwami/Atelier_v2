@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { HttpController } from './app.http.controller';
+import { InventoryService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { validate } from './env.validation';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
@@ -11,7 +11,7 @@ import config from './mikro-orm.config';
     ConfigModule.forRoot({ isGlobal: true, validate }),
     MikroOrmModule.forRoot(config),
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [HttpController],
+  providers: [InventoryService],
 })
 export class AppModule {}
