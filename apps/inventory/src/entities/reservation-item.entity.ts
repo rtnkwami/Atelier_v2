@@ -14,6 +14,6 @@ export class ReservationItem {
   @ManyToOne(() => Product)
   product: Product;
 
-  @Property()
-  quantity: string;
+  @Property({ type: 'int' })
+  quantity: number;
 }
