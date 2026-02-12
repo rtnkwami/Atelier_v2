@@ -1,11 +1,12 @@
-import { Body, Controller, Get, Post, UsePipes } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, UsePipes } from '@nestjs/common';
 import { InventoryService } from './app.service';
 import {
   CreateProductSchema,
+  type ProductSearch,
+  SearchProductSchema,
   type ProductCreate,
 } from 'src/validation/product.validation';
 import { HttpRequestValidationPipe } from './pipes/request.validation.pipe';
-import { Product } from './entities/product.entity';
 
 @Controller()
 export class HttpController {
@@ -13,8 +14,14 @@ export class HttpController {
 
   @Post()
   @UsePipes(new HttpRequestValidationPipe(CreateProductSchema))
-  private createProduct(@Body() data: ProductCreate): Promise<Product> {
+  private createProduct(@Body() data: ProductCreate) {
     return this.inventoryService.createProduct(data);
+  }
+
+  @Get()
+  @UsePipes(new HttpRequestValidationPipe(SearchProductSchema))
+  private searchProducts(@Query() query: ProductSearch) {
+    return this.inventoryService.searchProducts(query);
   }
 
   @Get()
