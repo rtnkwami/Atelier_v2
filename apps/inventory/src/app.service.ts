@@ -1,12 +1,12 @@
 import { EntityManager, FilterQuery, MikroORM } from '@mikro-orm/postgresql';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Product } from './entities/product.entity';
-import {
+import type {
   ProductCreate,
   ProductSearch,
   ProductUpdate,
 } from 'src/validation/product.validation';
-import { raw, Transactional } from '@mikro-orm/core';
+import { Transactional, wrap } from '@mikro-orm/core';
 
 type ProductSearchResult = {
   id: string;
@@ -81,24 +81,22 @@ export class InventoryService {
     return result;
   }
 
+  @Transactional()
   public async updateProduct(id: string, data: ProductUpdate) {
-    const qb = this.em.createQueryBuilder(Product);
-    qb.update({ ...data, updatedAt: raw('now()') as Date })
-      .where({ id })
-      .returning('*');
-    const result = await qb.getSingleResult();
-    if (!result) {
+    const product = await this.em.findOne(Product, id);
+    if (!product) {
       throw new NotFoundException(`Product ${id} does not exist`);
     }
+    wrap(product).assign(data);
 
     return {
-      id: result.id,
-      name: result.name,
-      description: result.description,
-      category: result.category,
-      price: result.price,
-      stock: result.stock,
-      images: result.images,
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      category: product.category,
+      price: product.price,
+      stock: product.stock,
+      images: product.images,
     };
   }
 
