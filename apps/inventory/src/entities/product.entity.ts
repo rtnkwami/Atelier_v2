@@ -1,12 +1,15 @@
 import {
+  Collection,
   DecimalType,
   Entity,
   JsonType,
+  OneToMany,
   OptionalProps,
   PrimaryKey,
   Property,
 } from '@mikro-orm/core';
 import { randomUUID } from 'crypto';
+import { StockReservation } from './stock-reservation.entity';
 
 @Entity()
 export class Product {
@@ -45,4 +48,7 @@ export class Product {
     defaultRaw: 'now()',
   })
   updatedAt = new Date();
+
+  @OneToMany(() => StockReservation, (reservation) => reservation.product)
+  stockReservations = new Collection<StockReservation>(this);
 }
