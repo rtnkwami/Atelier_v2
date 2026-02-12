@@ -4,7 +4,9 @@ import { Product } from './entities/product.entity';
 import {
   ProductCreate,
   ProductSearch,
+  ProductUpdate,
 } from 'src/validation/product.validation';
+import { raw } from '@mikro-orm/core';
 
 type ProductSearchResult = {
   id: string;
@@ -77,5 +79,26 @@ export class InventoryService {
       throw new NotFoundException('the requested product does not exist');
 
     return result;
+  }
+
+  public async updateProduct(id: string, data: ProductUpdate) {
+    const qb = this.em.createQueryBuilder(Product);
+    qb.update({ ...data, updatedAt: raw('now()') as Date })
+      .where({ id })
+      .returning('*');
+    const result = await qb.getSingleResult();
+    if (!result) {
+      throw new NotFoundException(`Product ${id} does not exist`);
+    }
+
+    return {
+      id: result.id,
+      name: result.name,
+      description: result.description,
+      category: result.category,
+      price: result.price,
+      stock: result.stock,
+      images: result.images,
+    };
   }
 }
