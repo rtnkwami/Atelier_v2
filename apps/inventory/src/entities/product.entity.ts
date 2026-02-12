@@ -9,7 +9,7 @@ import {
   Property,
 } from '@mikro-orm/core';
 import { randomUUID } from 'crypto';
-import { StockReservation } from './reservation.entity';
+import { ReservationItem } from './reservation-item.entity';
 
 @Entity()
 export class Product {
@@ -17,6 +17,9 @@ export class Product {
 
   @PrimaryKey({ type: 'uuid' })
   id: string = randomUUID();
+
+  @OneToMany(() => ReservationItem, (item) => item.product)
+  reservations = new Collection<ReservationItem>(this);
 
   @Property({ unique: true })
   name: string;
@@ -48,7 +51,4 @@ export class Product {
     defaultRaw: 'now()',
   })
   updatedAt = new Date();
-
-  @OneToMany(() => StockReservation, (reservation) => reservation.product)
-  stockReservations = new Collection<StockReservation>(this);
 }

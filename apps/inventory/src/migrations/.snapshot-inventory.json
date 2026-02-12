@@ -138,15 +138,6 @@
           "length": 255,
           "mappedType": "string"
         },
-        "product_id": {
-          "name": "product_id",
-          "type": "uuid",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "uuid"
-        },
         "reserved_stock": {
           "name": "reserved_stock",
           "type": "int",
@@ -183,10 +174,69 @@
         {
           "keyName": "stock_reservation_pkey",
           "columnNames": [
-            "reservation_id",
-            "product_id"
+            "reservation_id"
           ],
-          "composite": true,
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "reservation_reservation_id": {
+          "name": "reservation_reservation_id",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "product_id": {
+          "name": "product_id",
+          "type": "uuid",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "uuid"
+        },
+        "quantity": {
+          "name": "quantity",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
+        }
+      },
+      "name": "reservation_item",
+      "schema": "public",
+      "indexes": [
+        {
+          "keyName": "reservation_item_pkey",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
           "constraint": true,
           "primary": true,
           "unique": true
@@ -194,12 +244,24 @@
       ],
       "checks": [],
       "foreignKeys": {
-        "stock_reservation_product_id_foreign": {
-          "constraintName": "stock_reservation_product_id_foreign",
+        "reservation_item_reservation_reservation_id_foreign": {
+          "constraintName": "reservation_item_reservation_reservation_id_foreign",
+          "columnNames": [
+            "reservation_reservation_id"
+          ],
+          "localTableName": "public.reservation_item",
+          "referencedColumnNames": [
+            "reservation_id"
+          ],
+          "referencedTableName": "public.stock_reservation",
+          "updateRule": "cascade"
+        },
+        "reservation_item_product_id_foreign": {
+          "constraintName": "reservation_item_product_id_foreign",
           "columnNames": [
             "product_id"
           ],
-          "localTableName": "public.stock_reservation",
+          "localTableName": "public.reservation_item",
           "referencedColumnNames": [
             "id"
           ],
