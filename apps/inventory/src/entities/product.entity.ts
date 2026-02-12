@@ -8,7 +8,7 @@ import {
 import { BaseEntity } from './base.entity';
 
 @Entity()
-export class Product extends BaseEntity {
+export class Product extends BaseEntity<'description' | 'images'> {
   @PrimaryKey()
   id: string;
 

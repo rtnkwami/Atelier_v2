@@ -1,7 +1,7 @@
 import { OptionalProps, Property } from '@mikro-orm/core';
 
-export abstract class BaseEntity {
-  [OptionalProps]?: 'createdAt' | 'updatedAt';
+export abstract class BaseEntity<Optional = never> {
+  [OptionalProps]?: 'createdAt' | 'updatedAt' | Optional;
 
   @Property({ defaultRaw: 'now()' })
   createdAt = new Date();
