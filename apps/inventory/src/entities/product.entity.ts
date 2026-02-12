@@ -9,7 +9,7 @@ import {
   Property,
 } from '@mikro-orm/core';
 import { randomUUID } from 'crypto';
-import { StockReservation } from './stock-reservation.entity';
+import { StockReservation } from './reservation.entity';
 
 @Entity()
 export class Product {
