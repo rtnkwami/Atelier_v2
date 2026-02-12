@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
@@ -46,5 +47,10 @@ export class HttpController {
     @Body() data: ProductUpdate,
   ) {
     return this.inventoryService.updateProduct(id, data);
+  }
+
+  @Delete(':id')
+  private deleteProduct(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.inventoryService.deleteProduct(id);
   }
 }

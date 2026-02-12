@@ -6,7 +6,7 @@ import {
   ProductSearch,
   ProductUpdate,
 } from 'src/validation/product.validation';
-import { raw } from '@mikro-orm/core';
+import { raw, Transactional } from '@mikro-orm/core';
 
 type ProductSearchResult = {
   id: string;
@@ -99,6 +99,24 @@ export class InventoryService {
       price: result.price,
       stock: result.stock,
       images: result.images,
+    };
+  }
+
+  @Transactional()
+  public async deleteProduct(id: string) {
+    const deletedProduct = await this.em.findOne(Product, id);
+    if (!deletedProduct)
+      throw new NotFoundException(`Product ${id} does not exist`);
+
+    this.em.remove(deletedProduct);
+    return {
+      id: deletedProduct.id,
+      name: deletedProduct.name,
+      description: deletedProduct.description,
+      category: deletedProduct.category,
+      price: deletedProduct.price,
+      stock: deletedProduct.stock,
+      images: deletedProduct.images,
     };
   }
 }
