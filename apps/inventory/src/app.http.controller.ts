@@ -17,6 +17,7 @@ import {
   SearchProductSchema,
   type ProductCreate,
   type ProductUpdate,
+  UpdateProductSchema,
 } from 'src/validation/product.validation';
 import { HttpRequestValidationPipe } from './pipes/request.validation.pipe';
 
@@ -42,6 +43,7 @@ export class HttpController {
   }
 
   @Patch(':id')
+  @UsePipes(new HttpRequestValidationPipe(UpdateProductSchema))
   private updateProduct(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() data: ProductUpdate,
