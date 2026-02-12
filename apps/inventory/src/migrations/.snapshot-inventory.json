@@ -17,11 +17,13 @@
         },
         "name": {
           "name": "name",
-          "type": "tsvector",
+          "type": "varchar(255)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false
+          "nullable": false,
+          "length": 255,
+          "mappedType": "string"
         },
         "description": {
           "name": "description",
@@ -108,27 +110,6 @@
           "constraint": true,
           "primary": false,
           "unique": true
-        },
-        {
-          "columnNames": [
-            "category"
-          ],
-          "composite": false,
-          "keyName": "product_category_unique",
-          "constraint": true,
-          "primary": false,
-          "unique": true
-        },
-        {
-          "keyName": "product_name_index",
-          "columnNames": [
-            "name"
-          ],
-          "composite": false,
-          "constraint": false,
-          "primary": false,
-          "unique": false,
-          "type": "fulltext"
         },
         {
           "keyName": "product_pkey",
