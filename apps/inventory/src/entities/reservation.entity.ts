@@ -16,9 +16,6 @@ export class StockReservation {
   items = new Collection<ReservationItem>(this);
 
   @Property()
-  reservedStock: number;
-
-  @Property()
   createdAt: Date = new Date();
 
   @Property({

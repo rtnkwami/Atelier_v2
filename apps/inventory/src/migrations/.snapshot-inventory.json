@@ -138,15 +138,6 @@
           "length": 255,
           "mappedType": "string"
         },
-        "reserved_stock": {
-          "name": "reserved_stock",
-          "type": "int",
-          "unsigned": false,
-          "autoincrement": false,
-          "primary": false,
-          "nullable": false,
-          "mappedType": "integer"
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamptz",
