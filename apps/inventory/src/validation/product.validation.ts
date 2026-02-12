@@ -11,3 +11,15 @@ export const CreateProductSchema = z
   })
   .strict();
 export type ProductCreate = z.infer<typeof CreateProductSchema>;
+
+export const SearchProductSchema = z
+  .object({
+    name: z.string().optional(),
+    category: z.string().optional(),
+    minPrice: z.number().min(0).optional(),
+    maxPrice: z.number().min(0).optional(),
+    page: z.number().min(1).optional().default(1),
+    limit: z.number().min(1).max(100).optional().default(20),
+  })
+  .strict();
+export type ProductSearch = z.infer<typeof SearchProductSchema>;
