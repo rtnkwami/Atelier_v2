@@ -3,9 +3,14 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { validate } from './env.validation';
+import { MikroOrmModule } from '@mikro-orm/nestjs';
+import config from './mikro-orm.config';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true, validate })],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true, validate }),
+    MikroOrmModule.forRoot(config),
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
