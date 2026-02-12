@@ -16,7 +16,7 @@ export class Product {
   [OptionalProps]?: 'description' | 'images' | 'createdAt' | 'updatedAt';
 
   @PrimaryKey({ type: 'uuid' })
-  id = randomUUID();
+  id: string = randomUUID();
 
   @Property({ unique: true })
   name: string;
