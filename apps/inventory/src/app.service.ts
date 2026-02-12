@@ -6,6 +6,14 @@ import {
   ProductSearch,
 } from 'src/validation/product.validation';
 
+type ProductSearchQueryResult = {
+  id: `${string}-${string}-${string}-${string}-${string}`;
+  name: string;
+  description?: string;
+  category: string;
+  price: number;
+};
+
 @Injectable()
 export class InventoryService {
   constructor(
@@ -25,14 +33,16 @@ export class InventoryService {
     limit: number = 20,
   ) {
     const skip = (page - 1) * limit;
-
     const search: FilterQuery<Product> = {};
+
     if (filters?.name) {
       search.name = { $fulltext: filters.name };
     }
+
     if (filters?.category) {
       search.category = filters.category;
     }
+
     if (filters?.minPrice || filters?.maxPrice) {
       search.price = {};
       if (filters.minPrice) search.price.$gte = filters.minPrice;
@@ -44,7 +54,10 @@ export class InventoryService {
       .where(search)
       .limit(limit)
       .offset(skip);
-    const [results, count] = await qb.getResultAndCount();
+    const [results, count] = (await qb.getResultAndCount()) as [
+      ProductSearchQueryResult[],
+      number,
+    ];
 
     return {
       products: results,
