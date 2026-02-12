@@ -6,13 +6,14 @@ import {
   PrimaryKey,
   Property,
 } from '@mikro-orm/core';
+import { randomUUID } from 'crypto';
 
 @Entity()
 export class Product {
   [OptionalProps]?: 'description' | 'images' | 'createdAt' | 'updatedAt';
 
-  @PrimaryKey()
-  id: string;
+  @PrimaryKey({ type: 'uuid' })
+  id = randomUUID();
 
   @Property({ unique: true })
   name: string;
