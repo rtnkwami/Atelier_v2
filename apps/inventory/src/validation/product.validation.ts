@@ -12,6 +12,9 @@ export const CreateProductSchema = z
   .strict();
 export type ProductCreate = z.infer<typeof CreateProductSchema>;
 
+export const UpdateProductSchema = CreateProductSchema.partial();
+export type ProductUpdate = z.infer<typeof UpdateProductSchema>;
+
 export const SearchProductSchema = z
   .object({
     name: z.string().optional(),
