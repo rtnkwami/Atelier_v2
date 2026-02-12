@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Query, UsePipes } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+  UsePipes,
+} from '@nestjs/common';
 import { InventoryService } from './app.service';
 import {
   CreateProductSchema,
@@ -24,8 +33,8 @@ export class HttpController {
     return this.inventoryService.searchProducts(query);
   }
 
-  @Get()
-  getHello(): string {
-    return this.inventoryService.getHello();
+  @Get(':id')
+  private getProduct(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.inventoryService.getProduct(id);
   }
 }

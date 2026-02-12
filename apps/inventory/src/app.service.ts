@@ -1,13 +1,13 @@
 import { EntityManager, FilterQuery, MikroORM } from '@mikro-orm/postgresql';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Product } from './entities/product.entity';
 import {
   ProductCreate,
   ProductSearch,
 } from 'src/validation/product.validation';
 
-type ProductSearchQueryResult = {
-  id: `${string}-${string}-${string}-${string}-${string}`;
+type ProductSearchResult = {
+  id: string;
   name: string;
   description?: string;
   category: string;
@@ -36,7 +36,7 @@ export class InventoryService {
     const search: FilterQuery<Product> = {};
 
     if (filters?.name) {
-      search.name = { $fulltext: filters.name };
+      search.name = { $ilike: filters.name };
     }
 
     if (filters?.category) {
@@ -55,7 +55,7 @@ export class InventoryService {
       .limit(limit)
       .offset(skip);
     const [results, count] = (await qb.getResultAndCount()) as [
-      ProductSearchQueryResult[],
+      ProductSearchResult[],
       number,
     ];
 
@@ -68,7 +68,14 @@ export class InventoryService {
     };
   }
 
-  getHello(): string {
-    return 'Hello World!';
+  public async getProduct(id: string) {
+    const qb = this.em.createQueryBuilder(Product);
+    qb.select(['id', 'name', 'description', 'price', 'category']).where({ id });
+    const result = (await qb.getSingleResult()) as ProductSearchResult | null;
+
+    if (!result)
+      throw new NotFoundException('the requested product does not exist');
+
+    return result;
   }
 }
