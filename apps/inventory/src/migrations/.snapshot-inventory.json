@@ -17,13 +17,11 @@
         },
         "name": {
           "name": "name",
-          "type": "varchar(255)",
+          "type": "tsvector",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": false,
-          "length": 255,
-          "mappedType": "string"
+          "nullable": false
         },
         "description": {
           "name": "description",
@@ -120,6 +118,17 @@
           "constraint": true,
           "primary": false,
           "unique": true
+        },
+        {
+          "keyName": "product_name_index",
+          "columnNames": [
+            "name"
+          ],
+          "composite": false,
+          "constraint": false,
+          "primary": false,
+          "unique": false,
+          "type": "fulltext"
         },
         {
           "keyName": "product_pkey",

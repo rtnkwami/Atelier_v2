@@ -2,6 +2,7 @@ import {
   Collection,
   DecimalType,
   Entity,
+  Index,
   JsonType,
   OneToMany,
   OptionalProps,
@@ -10,6 +11,7 @@ import {
 } from '@mikro-orm/core';
 import { randomUUID } from 'crypto';
 import { StockReservation } from './stock-reservation.entity';
+import { FullTextType } from '@mikro-orm/postgresql';
 
 @Entity()
 export class Product {
@@ -18,7 +20,8 @@ export class Product {
   @PrimaryKey({ type: 'uuid' })
   id = randomUUID();
 
-  @Property({ unique: true })
+  @Index({ type: 'fulltext' })
+  @Property({ type: FullTextType, unique: true })
   name: string;
 
   @Property({ nullable: true })
