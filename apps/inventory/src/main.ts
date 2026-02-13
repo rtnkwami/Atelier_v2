@@ -14,10 +14,12 @@ async function bootstrap() {
       reconnect: true,
       reconnectTimeWait: 5000,
       reconnectJitter: 1000,
+      gracefulShutdown: true,
     },
   });
 
   await app.startAllMicroservices();
+  app.enableShutdownHooks();
   await app.listen(process.env.PORT ?? 3000);
 }
 void bootstrap();
