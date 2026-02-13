@@ -6,7 +6,11 @@ import type {
   ProductSearch,
   ProductUpdate,
 } from 'src/validation/product.validation';
-import { Transactional, wrap } from '@mikro-orm/core';
+import { LockMode, Transactional, wrap } from '@mikro-orm/core';
+import type { ReserveStockCommand } from 'contracts';
+import { StockReservation } from './entities/reservation.entity';
+import { ReservationItem } from './entities/reservation-item.entity';
+import { RpcException } from '@nestjs/microservices';
 
 type ProductSearchResult = {
   id: string;
@@ -115,6 +119,99 @@ export class InventoryService {
       price: deletedProduct.price,
       stock: deletedProduct.stock,
       images: deletedProduct.images,
+    };
+  }
+
+  private async findOrCreateReservation(reservationId: string) {
+    const existingReservation = await this.em.findOne(
+      StockReservation,
+      { reservationId },
+      { populate: ['items'] },
+    );
+
+    const reservation = existingReservation ?? new StockReservation();
+    if (!existingReservation) {
+      reservation.reservationId = reservationId;
+      this.em.persist(reservation);
+    }
+    return reservation;
+  }
+
+  private async validateProductStock(id: string, requestedQuantity: number) {
+    const product = await this.em.findOne(
+      Product,
+      { id },
+      { lockMode: LockMode.PESSIMISTIC_WRITE, populate: ['reservations'] },
+    );
+    if (!product) {
+      throw new NotFoundException(`Product ${id} does not exist`);
+    }
+
+    const currentReservedStock = product.reservations.reduce(
+      (acc, item) => acc + item.quantity,
+      0,
+    );
+    const totalRequestedStock = currentReservedStock + requestedQuantity;
+
+    if (product.stock - totalRequestedStock < 0) {
+      return {
+        error: {
+          id: product.id,
+          requested: requestedQuantity,
+          stock: product.stock - currentReservedStock,
+        },
+      };
+    }
+    return { product };
+  }
+
+  @Transactional()
+  public async reserveInventory(data: ReserveStockCommand) {
+    const sortedRequestItems = [...data.products].sort((a, b) =>
+      a.id.localeCompare(b.id),
+    );
+    const reservation = await this.findOrCreateReservation(data.reservationId);
+
+    const reservationItems: ReservationItem[] = [];
+    const reservationErrors: {
+      id: string;
+      requested: number;
+      stock: number;
+    }[] = [];
+
+    for (const requested of sortedRequestItems) {
+      const { product, error } = await this.validateProductStock(
+        requested.id,
+        requested.quantity,
+      );
+
+      if (error) {
+        reservationErrors.push(error);
+        continue;
+      }
+
+      if (product) {
+        const item = new ReservationItem();
+        item.product = product;
+        item.quantity = requested.quantity;
+        item.reservation = reservation;
+
+        reservationItems.push(item);
+      }
+    }
+
+    if (reservationErrors.length > 0) {
+      throw new RpcException({
+        message: 'insufficient stock for one or more products',
+        stockValidation: reservationErrors,
+      });
+    }
+    reservation.items.set(reservationItems);
+
+    return {
+      reservationId: data.reservationId,
+      created: reservation.createdAt,
+      expires: reservation.expiresAt,
     };
   }
 }
