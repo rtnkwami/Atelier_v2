@@ -1,1 +1,2 @@
-export * from './messages/inventory.messages'
+export * from './inventory.contract'
+export * from './command.patterns';

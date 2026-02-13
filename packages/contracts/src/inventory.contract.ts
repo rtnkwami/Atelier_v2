@@ -2,11 +2,11 @@ import { z } from 'zod';
 
 const ReservationItemSchema = z.object({
   id: z.uuid(),
-  quantity: z.number(),
+  quantity: z.number().int().positive(),
 });
 
 export const ReserveStockCommandSchema = z.object({
-  reservationId: z.string().min(1),
+  reservationId: z.uuid(),
   products: z.array(ReservationItemSchema).nonempty(),
 });
 
