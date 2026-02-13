@@ -12,7 +12,9 @@ export class StockReservation {
   @PrimaryKey()
   reservationId: string;
 
-  @OneToMany(() => ReservationItem, (item) => item.reservation)
+  @OneToMany(() => ReservationItem, (item) => item.reservation, {
+    orphanRemoval: true,
+  })
   items = new Collection<ReservationItem>(this);
 
   @Property()
