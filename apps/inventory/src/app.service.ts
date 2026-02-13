@@ -6,7 +6,12 @@ import type {
   ProductSearch,
   ProductUpdate,
 } from 'src/validation/product.validation';
-import { LockMode, Transactional, wrap } from '@mikro-orm/core';
+import {
+  CreateRequestContext,
+  LockMode,
+  Transactional,
+  wrap,
+} from '@mikro-orm/core';
 import type { ReserveStockCommand } from 'contracts';
 import { StockReservation } from './entities/reservation.entity';
 import { ReservationItem } from './entities/reservation-item.entity';
@@ -165,6 +170,7 @@ export class InventoryService {
     return { product };
   }
 
+  @CreateRequestContext()
   @Transactional()
   public async reserveInventory(data: ReserveStockCommand) {
     const sortedRequestItems = [...data.products].sort((a, b) =>

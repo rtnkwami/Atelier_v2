@@ -7,7 +7,6 @@ import {
   type ReserveStockCommand,
   ReserveStockCommandSchema,
 } from 'contracts';
-import { CreateRequestContext } from '@mikro-orm/core';
 
 @Controller()
 export class NatsController {
@@ -15,7 +14,6 @@ export class NatsController {
 
   @MessagePattern(Command.ReserveStock)
   @UsePipes(new RpcRequestValidationPipe(ReserveStockCommandSchema))
-  @CreateRequestContext()
   public reserveProductStock(@Payload() payload: ReserveStockCommand) {
     return this.inventoryService.reserveInventory(payload);
   }
