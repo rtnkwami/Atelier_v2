@@ -4,6 +4,8 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { RpcRequestValidationPipe } from './pipes/request.validation.pipe';
 import {
   Command,
+  type CommitStockReservation,
+  CommitStockReservationSchema,
   type ReserveStockCommand,
   ReserveStockCommandSchema,
   ReserveStockResponseSchema,
@@ -19,5 +21,13 @@ export class NatsController {
   @ValidateRpcResponse(ReserveStockResponseSchema)
   public async reserveProductStock(@Payload() payload: ReserveStockCommand) {
     return await this.inventoryService.reserveInventory(payload);
+  }
+
+  @MessagePattern(Command.CommitReservation)
+  @UsePipes(new RpcRequestValidationPipe(CommitStockReservationSchema))
+  public async commitStockReservation(
+    @Payload() payload: CommitStockReservation,
+  ) {
+    return await this.inventoryService.commitInventoryReservations(payload);
   }
 }

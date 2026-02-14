@@ -12,9 +12,10 @@ import {
   Transactional,
   wrap,
 } from '@mikro-orm/core';
-import type { ReserveStockCommand } from 'contracts';
+import type { CommitStockReservation, ReserveStockCommand } from 'contracts';
 import { StockReservation } from './entities/reservation.entity';
 import { ReservationItem } from './entities/reservation-item.entity';
+import { RpcException } from '@nestjs/microservices';
 
 type ProductSearchResult = {
   id: string;
@@ -223,6 +224,59 @@ export class InventoryService {
         created: reservation.createdAt,
         expires: reservation.expiresAt,
       },
+    };
+  }
+
+  @CreateRequestContext()
+  @Transactional()
+  public async commitInventoryReservations(data: CommitStockReservation) {
+    const reservation = await this.em.findOne(
+      StockReservation,
+      { reservationId: data.reservationId },
+      {
+        populate: ['items'],
+        populateOrderBy: {
+          items: {
+            product: { id: 'asc' },
+          }, // sort reservation items to prevent deadlock in concurrent situations
+        },
+      },
+    );
+
+    if (!reservation) {
+      throw new RpcException(
+        `Reservation ${data.reservationId} does not exist`,
+      );
+    }
+
+    const productIds: string[] = [];
+    const reservedItems = reservation.items.getItems();
+    reservedItems.forEach((item) => {
+      productIds.push(item.product.id);
+    });
+
+    const products = await this.em.findAll(Product, {
+      where: {
+        id: { $in: productIds },
+      },
+      lockMode: LockMode.PESSIMISTIC_WRITE,
+    });
+
+    products.forEach((product) => {
+      const reservedItem = reservedItems.find(
+        (item) => item.product.id === product.id,
+      );
+      if (reservedItem) {
+        product.stock -= reservedItem.quantity;
+        reservation.items.remove(reservedItem);
+      }
+    });
+    this.em.remove(reservation);
+
+    return {
+      reservationId: data.reservationId,
+      committedAt: new Date(),
+      affectedProducts: productIds,
     };
   }
 }
