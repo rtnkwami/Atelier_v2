@@ -39,3 +39,11 @@ export const ReserveStockResponseSchema = z.discriminatedUnion('success', [
 ])
 
 export type ReserveStockResponse = z.infer<typeof ReserveStockResponseSchema>
+
+// --- Commit Stock Reservations ---
+
+export const CommitStockReservationSchema = z.object({
+  reservationId: z.string().min(1),
+});
+
+export type CommitStockReservation = z.infer<typeof CommitStockReservationSchema>;
