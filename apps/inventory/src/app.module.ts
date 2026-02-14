@@ -7,12 +7,14 @@ import { MikroOrmModule } from '@mikro-orm/nestjs';
 import config from './mikro-orm.config';
 import { NatsController } from './app.nats.controller';
 import { LoggerModule } from 'nestjs-pino';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, validate }),
     MikroOrmModule.forRoot(config),
     LoggerModule.forRoot(),
+    ScheduleModule.forRoot(),
   ],
   controllers: [HttpController, NatsController],
   providers: [InventoryService],
