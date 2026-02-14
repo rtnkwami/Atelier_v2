@@ -20,6 +20,7 @@ import type {
 import { StockReservation } from './entities/reservation.entity';
 import { ReservationItem } from './entities/reservation-item.entity';
 import { RpcException } from '@nestjs/microservices';
+import { Cron } from '@nestjs/schedule';
 
 type ProductSearchResult = {
   id: string;
@@ -310,5 +311,27 @@ export class InventoryService {
       reservationId: data.reservationId,
       affectedProducts,
     };
+  }
+
+  @Cron('*/5 * * * *')
+  @CreateRequestContext()
+  @Transactional()
+  private async removeExpiredReservations() {
+    /** A pessimistic partial write is used here because if we have concurrent containers/pods
+     * running the same cron job and they both try to access the same expired records,
+     * 'SKIP LOCKED' ensures each pod only processes available rows and ignores
+     * those already being handled by another instance.
+     */
+    const expiredReservations = await this.em.findAll(StockReservation, {
+      where: { expiresAt: { $lt: new Date() } },
+      orderBy: { reservationId: 'asc' },
+      lockMode: LockMode.PESSIMISTIC_PARTIAL_WRITE,
+      limit: 100, // batch delete expired reservations
+    });
+
+    if (expiredReservations.length === 0) {
+      return;
+    }
+    expiredReservations.forEach((reservation) => this.em.remove(reservation));
   }
 }
