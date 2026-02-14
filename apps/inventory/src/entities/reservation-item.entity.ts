@@ -1,4 +1,10 @@
-import { Entity, ManyToOne, PrimaryKey, Property } from '@mikro-orm/core';
+import {
+  Entity,
+  ManyToOne,
+  PrimaryKey,
+  Property,
+  type Rel,
+} from '@mikro-orm/core';
 import { StockReservation } from './reservation.entity';
 import { randomUUID } from 'crypto';
 import { Product } from './product.entity';
@@ -8,11 +14,11 @@ export class ReservationItem {
   @PrimaryKey()
   id: string = randomUUID();
 
-  @ManyToOne(() => StockReservation)
-  reservation: StockReservation;
+  @ManyToOne({ entity: () => StockReservation })
+  reservation: Rel<StockReservation>; // use Rel<> to avoid initialization errors due to circular deps
 
-  @ManyToOne(() => Product)
-  product: Product;
+  @ManyToOne({ entity: () => Product })
+  product: Rel<Product>; // use Rel<> to avoid initialization errors due to circular deps
 
   @Property({ type: 'int' })
   quantity: number;
