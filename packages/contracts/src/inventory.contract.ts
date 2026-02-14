@@ -55,3 +55,8 @@ export const CommitStockResponseSchema = z.object({
 });
 
 export type CommitStockResponse = z.infer<typeof CommitStockResponseSchema>;
+
+export const ReleaseStockReservationSchema = z.object({
+  reservationId: z.string().min(1),
+});
+export type ReleaseStockReservation = z.infer<typeof ReleaseStockReservationSchema>;
