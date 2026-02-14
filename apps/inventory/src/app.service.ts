@@ -15,7 +15,6 @@ import {
 import type { ReserveStockCommand } from 'contracts';
 import { StockReservation } from './entities/reservation.entity';
 import { ReservationItem } from './entities/reservation-item.entity';
-import { RpcException } from '@nestjs/microservices';
 
 type ProductSearchResult = {
   id: string;
@@ -149,7 +148,7 @@ export class InventoryService {
       { lockMode: LockMode.PESSIMISTIC_WRITE, populate: ['reservations'] },
     );
     if (!product) {
-      throw new NotFoundException(`Product ${id} does not exist`);
+      throw new Error(`Product ${id} does not exist`);
     }
 
     const currentReservedStock = product.reservations.reduce(
@@ -207,17 +206,23 @@ export class InventoryService {
     }
 
     if (reservationErrors.length > 0) {
-      throw new RpcException({
-        message: 'insufficient stock for one or more products',
-        stockValidation: reservationErrors,
-      });
+      return {
+        success: false,
+        error: {
+          message: 'insufficient stock for one or more products',
+          reason: reservationErrors,
+        },
+      };
     }
     reservation.items.set(reservationItems);
 
     return {
-      reservationId: data.reservationId,
-      created: reservation.createdAt,
-      expires: reservation.expiresAt,
+      success: true,
+      data: {
+        reservationId: data.reservationId,
+        created: reservation.createdAt,
+        expires: reservation.expiresAt,
+      },
     };
   }
 }
