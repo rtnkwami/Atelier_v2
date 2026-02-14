@@ -4,14 +4,16 @@ import { MessagePattern, Payload } from '@nestjs/microservices';
 import { RpcRequestValidationPipe } from './pipes/request.validation.pipe';
 import {
   Command,
-  type CommitStockReservation,
-  CommitStockReservationSchema,
+  CommitStockEventSchema,
   CommitStockResponseSchema,
-  type ReleaseStockReservation,
-  ReleaseStockReservationSchema,
-  type ReserveStockCommand,
-  ReserveStockCommandSchema,
+  ReleaseStockEventSchema,
+  ReserveStockEventSchema,
   ReserveStockResponseSchema,
+} from 'contracts';
+import type {
+  CommitStockEvent,
+  ReleaseStockReservation,
+  ReserveStockEvent,
 } from 'contracts';
 import { ValidateRpcResponse } from './validation/response.validation.decorator';
 
@@ -20,23 +22,21 @@ export class NatsController {
   constructor(private readonly inventoryService: InventoryService) {}
 
   @MessagePattern(Command.ReserveStock)
-  @UsePipes(new RpcRequestValidationPipe(ReserveStockCommandSchema))
+  @UsePipes(new RpcRequestValidationPipe(ReserveStockEventSchema))
   @ValidateRpcResponse(ReserveStockResponseSchema)
-  public async reserveProductStock(@Payload() payload: ReserveStockCommand) {
+  public async reserveProductStock(@Payload() payload: ReserveStockEvent) {
     return await this.inventoryService.reserveInventory(payload);
   }
 
   @MessagePattern(Command.CommitReservation)
-  @UsePipes(new RpcRequestValidationPipe(CommitStockReservationSchema))
+  @UsePipes(new RpcRequestValidationPipe(CommitStockEventSchema))
   @ValidateRpcResponse(CommitStockResponseSchema)
-  public async commitStockReservation(
-    @Payload() payload: CommitStockReservation,
-  ) {
+  public async commitStockReservation(@Payload() payload: CommitStockEvent) {
     return await this.inventoryService.commitInventoryReservations(payload);
   }
 
   @MessagePattern(Command.ReleaseStock)
-  @UsePipes(new RpcRequestValidationPipe(ReleaseStockReservationSchema))
+  @UsePipes(new RpcRequestValidationPipe(ReleaseStockEventSchema))
   public async releaseInventory(@Payload() payload: ReleaseStockReservation) {
     return this.inventoryService.releaseInventory(payload);
   }
