@@ -6,6 +6,7 @@ import {
   Command,
   type CommitStockReservation,
   CommitStockReservationSchema,
+  CommitStockResponseSchema,
   type ReserveStockCommand,
   ReserveStockCommandSchema,
   ReserveStockResponseSchema,
@@ -25,6 +26,7 @@ export class NatsController {
 
   @MessagePattern(Command.CommitReservation)
   @UsePipes(new RpcRequestValidationPipe(CommitStockReservationSchema))
+  @ValidateRpcResponse(CommitStockResponseSchema)
   public async commitStockReservation(
     @Payload() payload: CommitStockReservation,
   ) {
