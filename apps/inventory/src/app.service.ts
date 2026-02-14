@@ -12,7 +12,11 @@ import {
   Transactional,
   wrap,
 } from '@mikro-orm/core';
-import type { CommitStockReservation, ReserveStockCommand } from 'contracts';
+import type {
+  CommitStockReservation,
+  ReleaseStockReservation,
+  ReserveStockCommand,
+} from 'contracts';
 import { StockReservation } from './entities/reservation.entity';
 import { ReservationItem } from './entities/reservation-item.entity';
 import { RpcException } from '@nestjs/microservices';
@@ -277,6 +281,34 @@ export class InventoryService {
       reservationId: data.reservationId,
       committedAt: new Date(),
       affectedProducts: productIds,
+    };
+  }
+
+  @CreateRequestContext()
+  @Transactional()
+  public async releaseInventory(data: ReleaseStockReservation) {
+    const reservation = await this.em.findOne(
+      StockReservation,
+      { reservationId: data.reservationId },
+      { populate: ['items'] },
+    );
+
+    if (!reservation) {
+      throw new RpcException(
+        `Reservation ${data.reservationId} does not exist`,
+      );
+    }
+
+    const affectedProducts = reservation.items.map((item) => ({
+      id: item.id,
+      releasedStock: item.quantity,
+    }));
+
+    this.em.remove(reservation);
+
+    return {
+      reservationId: data.reservationId,
+      affectedProducts,
     };
   }
 }

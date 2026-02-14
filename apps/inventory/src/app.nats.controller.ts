@@ -7,6 +7,8 @@ import {
   type CommitStockReservation,
   CommitStockReservationSchema,
   CommitStockResponseSchema,
+  type ReleaseStockReservation,
+  ReleaseStockReservationSchema,
   type ReserveStockCommand,
   ReserveStockCommandSchema,
   ReserveStockResponseSchema,
@@ -31,5 +33,11 @@ export class NatsController {
     @Payload() payload: CommitStockReservation,
   ) {
     return await this.inventoryService.commitInventoryReservations(payload);
+  }
+
+  @MessagePattern(Command.ReleaseStock)
+  @UsePipes(new RpcRequestValidationPipe(ReleaseStockReservationSchema))
+  public async releaseInventory(@Payload() payload: ReleaseStockReservation) {
+    return this.inventoryService.releaseInventory(payload);
   }
 }
