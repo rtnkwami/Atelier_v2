@@ -47,3 +47,11 @@ export const CommitStockReservationSchema = z.object({
 });
 
 export type CommitStockReservation = z.infer<typeof CommitStockReservationSchema>;
+
+export const CommitStockResponseSchema = z.object({
+  reservationId: z.uuid(),
+  committedAt: z.date(),
+  affectedProducts: z.array(z.string()),
+});
+
+export type CommitStockResponse = z.infer<typeof CommitStockResponseSchema>;
