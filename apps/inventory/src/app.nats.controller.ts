@@ -6,7 +6,9 @@ import {
   Command,
   type ReserveStockCommand,
   ReserveStockCommandSchema,
+  ReserveStockResponseSchema,
 } from 'contracts';
+import { ValidateRpcResponse } from './validation/response.validation.decorator';
 
 @Controller()
 export class NatsController {
@@ -14,7 +16,8 @@ export class NatsController {
 
   @MessagePattern(Command.ReserveStock)
   @UsePipes(new RpcRequestValidationPipe(ReserveStockCommandSchema))
-  public reserveProductStock(@Payload() payload: ReserveStockCommand) {
-    return this.inventoryService.reserveInventory(payload);
+  @ValidateRpcResponse(ReserveStockResponseSchema)
+  public async reserveProductStock(@Payload() payload: ReserveStockCommand) {
+    return await this.inventoryService.reserveInventory(payload);
   }
 }
