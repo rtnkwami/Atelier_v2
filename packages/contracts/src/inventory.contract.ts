@@ -5,12 +5,12 @@ const ReservationItemSchema = z.object({
   quantity: z.number().int().positive(),
 });
 
-export const ReserveStockCommandSchema = z.object({
+export const ReserveStockEventSchema = z.object({
   reservationId: z.uuid(),
   products: z.array(ReservationItemSchema).nonempty(),
 });
 
-export type ReserveStockCommand = z.infer<typeof ReserveStockCommandSchema>;
+export type ReserveStockEvent = z.infer<typeof ReserveStockEventSchema>;
 
 export const ReserveStockResponseSchema = z.discriminatedUnion('success', [
   z.object({
@@ -20,7 +20,7 @@ export const ReserveStockResponseSchema = z.discriminatedUnion('success', [
       created: z.date(),
       expires: z.date()
     }),
-    error: z.never().optional()
+    error: z.undefined().optional()
   }),
   z.object({
     success: z.literal(false),
@@ -34,7 +34,7 @@ export const ReserveStockResponseSchema = z.discriminatedUnion('success', [
         })
       ),
     }),
-    data: z.never().optional()
+    data: z.undefined().optional()
   })
 ])
 
@@ -42,11 +42,11 @@ export type ReserveStockResponse = z.infer<typeof ReserveStockResponseSchema>
 
 // --- Commit Stock Reservations ---
 
-export const CommitStockReservationSchema = z.object({
+export const CommitStockEventSchema = z.object({
   reservationId: z.string().min(1),
 });
 
-export type CommitStockReservation = z.infer<typeof CommitStockReservationSchema>;
+export type CommitStockEvent = z.infer<typeof CommitStockEventSchema>;
 
 export const CommitStockResponseSchema = z.object({
   reservationId: z.uuid(),
@@ -55,3 +55,8 @@ export const CommitStockResponseSchema = z.object({
 });
 
 export type CommitStockResponse = z.infer<typeof CommitStockResponseSchema>;
+
+export const ReleaseStockEventSchema = z.object({
+  reservationId: z.string().min(1),
+});
+export type ReleaseStockReservation = z.infer<typeof ReleaseStockEventSchema>;

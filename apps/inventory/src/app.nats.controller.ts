@@ -1,35 +1,54 @@
-import { Controller, UsePipes } from '@nestjs/common';
+import { Controller, Inject, UsePipes } from '@nestjs/common';
 import { InventoryService } from './app.service';
-import { MessagePattern, Payload } from '@nestjs/microservices';
+import { ClientProxy, EventPattern, Payload } from '@nestjs/microservices';
 import { RpcRequestValidationPipe } from './pipes/request.validation.pipe';
 import {
-  Command,
-  type CommitStockReservation,
-  CommitStockReservationSchema,
-  CommitStockResponseSchema,
-  type ReserveStockCommand,
-  ReserveStockCommandSchema,
-  ReserveStockResponseSchema,
+  CommitStockEventSchema,
+  InventoryEvents,
+  OrderEvents,
+  PaymentEvents,
+  ReleaseStockEventSchema,
+  ReserveStockEventSchema,
 } from 'contracts';
-import { ValidateRpcResponse } from './validation/response.validation.decorator';
+import type {
+  CommitStockEvent,
+  ReleaseStockReservation,
+  ReserveStockEvent,
+} from 'contracts';
 
 @Controller()
 export class NatsController {
-  constructor(private readonly inventoryService: InventoryService) {}
+  constructor(
+    private readonly inventoryService: InventoryService,
+    @Inject('INVENTORY_SERVICE') private readonly client: ClientProxy,
+  ) {}
 
-  @MessagePattern(Command.ReserveStock)
-  @UsePipes(new RpcRequestValidationPipe(ReserveStockCommandSchema))
-  @ValidateRpcResponse(ReserveStockResponseSchema)
-  public async reserveProductStock(@Payload() payload: ReserveStockCommand) {
-    return await this.inventoryService.reserveInventory(payload);
+  @EventPattern(OrderEvents.OrderPlaced)
+  @UsePipes(new RpcRequestValidationPipe(ReserveStockEventSchema))
+  public async reserveProductStock(@Payload() payload: ReserveStockEvent) {
+    const response = await this.inventoryService.reserveInventory(payload);
+
+    if (response.success) {
+      this.client.emit(InventoryEvents.InventoryReserved, response.data);
+    }
+
+    if (response.error) {
+      this.client.emit(InventoryEvents.InventoryExhausted, response.error);
+    }
   }
 
-  @MessagePattern(Command.CommitReservation)
-  @UsePipes(new RpcRequestValidationPipe(CommitStockReservationSchema))
-  @ValidateRpcResponse(CommitStockResponseSchema)
-  public async commitStockReservation(
-    @Payload() payload: CommitStockReservation,
-  ) {
-    return await this.inventoryService.commitInventoryReservations(payload);
+  @EventPattern(PaymentEvents.PaymentSucceeded)
+  @UsePipes(new RpcRequestValidationPipe(CommitStockEventSchema))
+  public async commitStockReservation(@Payload() payload: CommitStockEvent) {
+    const response =
+      await this.inventoryService.commitInventoryReservations(payload);
+    this.client.emit(InventoryEvents.InventoryCommitted, response);
+  }
+
+  @EventPattern(OrderEvents.OrderCancelled)
+  @UsePipes(new RpcRequestValidationPipe(ReleaseStockEventSchema))
+  public async releaseInventory(@Payload() payload: ReleaseStockReservation) {
+    const response = await this.inventoryService.releaseInventory(payload);
+    this.client.emit(InventoryEvents.InventoryReleased, response);
   }
 }

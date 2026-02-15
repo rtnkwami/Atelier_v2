@@ -1,4 +1,4 @@
-import { EntityManager, FilterQuery, MikroORM } from '@mikro-orm/postgresql';
+import { EntityManager, FilterQuery } from '@mikro-orm/postgresql';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Product } from './entities/product.entity';
 import type {
@@ -12,10 +12,17 @@ import {
   Transactional,
   wrap,
 } from '@mikro-orm/core';
-import type { CommitStockReservation, ReserveStockCommand } from 'contracts';
+import type {
+  CommitStockEvent,
+  ReleaseStockReservation,
+  ReserveStockEvent,
+  ReserveStockResponse,
+} from 'contracts';
 import { StockReservation } from './entities/reservation.entity';
 import { ReservationItem } from './entities/reservation-item.entity';
 import { RpcException } from '@nestjs/microservices';
+import { Cron } from '@nestjs/schedule';
+import { PinoLogger } from 'nestjs-pino';
 
 type ProductSearchResult = {
   id: string;
@@ -28,9 +35,11 @@ type ProductSearchResult = {
 @Injectable()
 export class InventoryService {
   constructor(
-    private readonly orm: MikroORM,
+    private readonly logger: PinoLogger,
     private readonly em: EntityManager,
-  ) {}
+  ) {
+    this.logger.setContext(InventoryService.name);
+  }
 
   public async createProduct(data: ProductCreate) {
     const product = this.em.create(Product, data);
@@ -172,7 +181,9 @@ export class InventoryService {
 
   @CreateRequestContext()
   @Transactional()
-  public async reserveInventory(data: ReserveStockCommand) {
+  public async reserveInventory(
+    data: ReserveStockEvent,
+  ): Promise<ReserveStockResponse> {
     const sortedRequestItems = [...data.products].sort((a, b) =>
       a.id.localeCompare(b.id),
     );
@@ -229,7 +240,7 @@ export class InventoryService {
 
   @CreateRequestContext()
   @Transactional()
-  public async commitInventoryReservations(data: CommitStockReservation) {
+  public async commitInventoryReservations(data: CommitStockEvent) {
     const reservation = await this.em.findOne(
       StockReservation,
       { reservationId: data.reservationId },
@@ -244,9 +255,8 @@ export class InventoryService {
     );
 
     if (!reservation) {
-      throw new RpcException(
-        `Reservation ${data.reservationId} does not exist`,
-      );
+      this.logger.error(`Reservation ${data.reservationId} does not exist`);
+      throw new Error(`Reservation ${data.reservationId} does not exist`);
     }
 
     const productIds: string[] = [];
@@ -278,5 +288,55 @@ export class InventoryService {
       committedAt: new Date(),
       affectedProducts: productIds,
     };
+  }
+
+  @CreateRequestContext()
+  @Transactional()
+  public async releaseInventory(data: ReleaseStockReservation) {
+    const reservation = await this.em.findOne(
+      StockReservation,
+      { reservationId: data.reservationId },
+      { populate: ['items'] },
+    );
+
+    if (!reservation) {
+      throw new RpcException(
+        `Reservation ${data.reservationId} does not exist`,
+      );
+    }
+
+    const affectedProducts = reservation.items.map((item) => ({
+      id: item.id,
+      releasedStock: item.quantity,
+    }));
+
+    this.em.remove(reservation);
+
+    return {
+      reservationId: data.reservationId,
+      affectedProducts,
+    };
+  }
+
+  @Cron('*/5 * * * *')
+  @CreateRequestContext()
+  @Transactional()
+  private async removeExpiredReservations() {
+    /** A pessimistic partial write is used here because if we have concurrent containers/pods
+     * running the same cron job and they both try to access the same expired records,
+     * 'SKIP LOCKED' ensures each pod only processes available rows and ignores
+     * those already being handled by another instance.
+     */
+    const expiredReservations = await this.em.findAll(StockReservation, {
+      where: { expiresAt: { $lt: new Date() } },
+      orderBy: { reservationId: 'asc' },
+      lockMode: LockMode.PESSIMISTIC_PARTIAL_WRITE,
+      limit: 100, // batch delete expired reservations
+    });
+
+    if (expiredReservations.length === 0) {
+      return;
+    }
+    expiredReservations.forEach((reservation) => this.em.remove(reservation));
   }
 }
