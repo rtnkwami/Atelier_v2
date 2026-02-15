@@ -8,22 +8,18 @@ import {
 } from '@nestjs/microservices';
 import { RpcRequestValidationPipe } from './pipes/request.validation.pipe';
 import {
-  Command,
   CommitStockEventSchema,
-  CommitStockResponseSchema,
   InventoryEvents,
   OrderEvents,
   PaymentEvents,
   ReleaseStockEventSchema,
   ReserveStockEventSchema,
-  ReserveStockResponseSchema,
 } from 'contracts';
 import type {
   CommitStockEvent,
   ReleaseStockReservation,
   ReserveStockEvent,
 } from 'contracts';
-import { ValidateRpcResponse } from './validation/response.validation.decorator';
 
 @Controller()
 export class NatsController {
@@ -34,7 +30,6 @@ export class NatsController {
 
   @EventPattern(OrderEvents.OrderPlaced)
   @UsePipes(new RpcRequestValidationPipe(ReserveStockEventSchema))
-  @ValidateRpcResponse(ReserveStockResponseSchema)
   public async reserveProductStock(@Payload() payload: ReserveStockEvent) {
     const response = await this.inventoryService.reserveInventory(payload);
 
@@ -49,7 +44,6 @@ export class NatsController {
 
   @MessagePattern(PaymentEvents.PaymentSucceeded)
   @UsePipes(new RpcRequestValidationPipe(CommitStockEventSchema))
-  @ValidateRpcResponse(CommitStockResponseSchema)
   public async commitStockReservation(@Payload() payload: CommitStockEvent) {
     const response =
       await this.inventoryService.commitInventoryReservations(payload);
