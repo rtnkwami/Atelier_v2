@@ -16,6 +16,7 @@ import type {
   CommitStockEvent,
   ReleaseStockReservation,
   ReserveStockEvent,
+  ReserveStockResponse,
 } from 'contracts';
 import { StockReservation } from './entities/reservation.entity';
 import { ReservationItem } from './entities/reservation-item.entity';
@@ -177,7 +178,9 @@ export class InventoryService {
 
   @CreateRequestContext()
   @Transactional()
-  public async reserveInventory(data: ReserveStockEvent) {
+  public async reserveInventory(
+    data: ReserveStockEvent,
+  ): Promise<ReserveStockResponse> {
     const sortedRequestItems = [...data.products].sort((a, b) =>
       a.id.localeCompare(b.id),
     );

@@ -1,11 +1,18 @@
-import { Controller, UsePipes } from '@nestjs/common';
+import { Controller, Inject, UsePipes } from '@nestjs/common';
 import { InventoryService } from './app.service';
-import { MessagePattern, Payload } from '@nestjs/microservices';
+import {
+  ClientProxy,
+  EventPattern,
+  MessagePattern,
+  Payload,
+} from '@nestjs/microservices';
 import { RpcRequestValidationPipe } from './pipes/request.validation.pipe';
 import {
   Command,
   CommitStockEventSchema,
   CommitStockResponseSchema,
+  InventoryEvents,
+  OrderEvents,
   ReleaseStockEventSchema,
   ReserveStockEventSchema,
   ReserveStockResponseSchema,
@@ -19,13 +26,24 @@ import { ValidateRpcResponse } from './validation/response.validation.decorator'
 
 @Controller()
 export class NatsController {
-  constructor(private readonly inventoryService: InventoryService) {}
+  constructor(
+    private readonly inventoryService: InventoryService,
+    @Inject('INVENTORY_SERVICE') private readonly client: ClientProxy,
+  ) {}
 
-  @MessagePattern(Command.ReserveStock)
+  @EventPattern(OrderEvents.OrderPlaced)
   @UsePipes(new RpcRequestValidationPipe(ReserveStockEventSchema))
   @ValidateRpcResponse(ReserveStockResponseSchema)
   public async reserveProductStock(@Payload() payload: ReserveStockEvent) {
-    return await this.inventoryService.reserveInventory(payload);
+    const response = await this.inventoryService.reserveInventory(payload);
+
+    if (response.success) {
+      this.client.emit(InventoryEvents.InventoryReserved, response.data);
+    }
+
+    if (response.error) {
+      this.client.emit(InventoryEvents.InventoryExhausted, response.error);
+    }
   }
 
   @MessagePattern(Command.CommitReservation)
