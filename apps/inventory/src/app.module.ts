@@ -8,6 +8,7 @@ import config from './mikro-orm.config';
 import { NatsController } from './app.nats.controller';
 import { LoggerModule } from 'nestjs-pino';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
@@ -15,6 +16,15 @@ import { ScheduleModule } from '@nestjs/schedule';
     MikroOrmModule.forRoot(config),
     LoggerModule.forRoot(),
     ScheduleModule.forRoot(),
+    ClientsModule.register([
+      {
+        name: 'INVENTORY_SERVICE',
+        transport: Transport.NATS,
+        options: {
+          servers: [process.env.NATS_ENDPOINT || 'nats://localhost:4222'],
+        },
+      },
+    ]),
   ],
   controllers: [HttpController, NatsController],
   providers: [InventoryService],
