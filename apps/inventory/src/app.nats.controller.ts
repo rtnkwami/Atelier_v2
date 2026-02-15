@@ -13,6 +13,7 @@ import {
   CommitStockResponseSchema,
   InventoryEvents,
   OrderEvents,
+  PaymentEvents,
   ReleaseStockEventSchema,
   ReserveStockEventSchema,
   ReserveStockResponseSchema,
@@ -46,11 +47,13 @@ export class NatsController {
     }
   }
 
-  @MessagePattern(Command.CommitReservation)
+  @MessagePattern(PaymentEvents.PaymentSucceeded)
   @UsePipes(new RpcRequestValidationPipe(CommitStockEventSchema))
   @ValidateRpcResponse(CommitStockResponseSchema)
   public async commitStockReservation(@Payload() payload: CommitStockEvent) {
-    return await this.inventoryService.commitInventoryReservations(payload);
+    const response =
+      await this.inventoryService.commitInventoryReservations(payload);
+    this.client.emit(InventoryEvents.InventoryCommitted, response);
   }
 
   @MessagePattern(Command.ReleaseStock)

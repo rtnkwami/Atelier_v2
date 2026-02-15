@@ -1,4 +1,4 @@
-import { EntityManager, FilterQuery, MikroORM } from '@mikro-orm/postgresql';
+import { EntityManager, FilterQuery } from '@mikro-orm/postgresql';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Product } from './entities/product.entity';
 import type {
@@ -22,6 +22,7 @@ import { StockReservation } from './entities/reservation.entity';
 import { ReservationItem } from './entities/reservation-item.entity';
 import { RpcException } from '@nestjs/microservices';
 import { Cron } from '@nestjs/schedule';
+import { PinoLogger } from 'nestjs-pino';
 
 type ProductSearchResult = {
   id: string;
@@ -34,9 +35,11 @@ type ProductSearchResult = {
 @Injectable()
 export class InventoryService {
   constructor(
-    private readonly orm: MikroORM,
+    private readonly logger: PinoLogger,
     private readonly em: EntityManager,
-  ) {}
+  ) {
+    this.logger.setContext(InventoryService.name);
+  }
 
   public async createProduct(data: ProductCreate) {
     const product = this.em.create(Product, data);
@@ -252,9 +255,8 @@ export class InventoryService {
     );
 
     if (!reservation) {
-      throw new RpcException(
-        `Reservation ${data.reservationId} does not exist`,
-      );
+      this.logger.error(`Reservation ${data.reservationId} does not exist`);
+      throw new Error(`Reservation ${data.reservationId} does not exist`);
     }
 
     const productIds: string[] = [];
