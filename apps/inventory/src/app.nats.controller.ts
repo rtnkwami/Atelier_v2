@@ -56,9 +56,10 @@ export class NatsController {
     this.client.emit(InventoryEvents.InventoryCommitted, response);
   }
 
-  @MessagePattern(Command.ReleaseStock)
+  @MessagePattern(OrderEvents.OrderCancelled)
   @UsePipes(new RpcRequestValidationPipe(ReleaseStockEventSchema))
   public async releaseInventory(@Payload() payload: ReleaseStockReservation) {
-    return this.inventoryService.releaseInventory(payload);
+    const response = await this.inventoryService.releaseInventory(payload);
+    this.client.emit(InventoryEvents.InventoryReleased, response);
   }
 }
