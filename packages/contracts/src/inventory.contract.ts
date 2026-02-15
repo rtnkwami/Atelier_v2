@@ -20,7 +20,7 @@ export const ReserveStockResponseSchema = z.discriminatedUnion('success', [
       created: z.date(),
       expires: z.date()
     }),
-    error: z.never().optional()
+    error: z.undefined().optional()
   }),
   z.object({
     success: z.literal(false),
@@ -34,7 +34,7 @@ export const ReserveStockResponseSchema = z.discriminatedUnion('success', [
         })
       ),
     }),
-    data: z.never().optional()
+    data: z.undefined().optional()
   })
 ])
 
