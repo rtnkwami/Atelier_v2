@@ -22,7 +22,7 @@ export class NatsController {
     private readonly inventoryService: InventoryService,
     @Inject('INVENTORY_SERVICE') private readonly client: ClientProxy,
   ) {}
-//test
+
   @EventPattern(OrderEvents.OrderPlaced)
   @UsePipes(new RpcRequestValidationPipe(ReserveStockEventSchema))
   public async reserveProductStock(@Payload() payload: ReserveStockEvent) {
