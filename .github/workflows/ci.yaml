@@ -60,7 +60,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install turbo
-        run: pnpm add turbo@2.8.7
+        run: pnpm add turbo@2.8.7 --global
 
       - name: Prune workspace
         run: pnpm turbo prune ${{ matrix.app }} --docker
