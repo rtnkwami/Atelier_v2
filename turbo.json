@@ -10,5 +10,6 @@
       "persistent": true,
       "cache": false
     }
-  }
+  },
+  "cacheDir": ".turbo/cache"
 }
