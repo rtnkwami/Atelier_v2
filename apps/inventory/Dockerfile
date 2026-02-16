@@ -11,7 +11,6 @@ WORKDIR /app
 COPY ./out/json/ ./
 RUN pnpm install --frozen-lockfile
 
-COPY .turbo ./
 COPY ./out/full/ ./
 RUN pnpm build
 
