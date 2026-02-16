@@ -5,7 +5,7 @@ import { Logger } from 'nestjs-pino';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-//test
+
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.NATS,
     options: {

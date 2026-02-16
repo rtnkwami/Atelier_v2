@@ -91,7 +91,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/atelier-${{ matrix.app }}:${{ github.sha }}
             ${{ secrets.DOCKERHUB_USERNAME }}/atelier-${{ matrix.app }}:latest
-          cache-to: type=gha,scope=${{ matrix.app }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.app }}
           cache-from: type=gha,scope=${{ matrix.app }}
 
   
