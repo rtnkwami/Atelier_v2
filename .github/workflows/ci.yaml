@@ -39,6 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    
     strategy:
       matrix:
         app: [inventory]
@@ -57,6 +58,9 @@ jobs:
         with:
           node-version: 20
           cache: 'pnpm'
+
+      - name: Install turbo
+        run: pnpm add turbo@2.8.7
 
       - name: Prune workspace
         run: pnpm turbo prune ${{ matrix.app }} --docker
